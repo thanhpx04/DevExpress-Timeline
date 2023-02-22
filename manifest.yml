@@ -11,5 +11,23 @@ modules:
 resources:
   - key: main
     path: static/hello-world/build
+permissions:
+  scopes:
+    - storage:app
+    - read:jira-work
+    - write:jira-work
+    - read:jira-user
+    - read:sprint:jira-software
+  content:
+    styles:
+      - unsafe-inline
+    scripts:
+      - unsafe-inline
+      - unsafe-hashes
+      - unsafe-eval
+  external:
+    fetch:
+      backend:
+        - testpluginsteam.atlassian.net
 app:
   id: ari:cloud:ecosystem::app/0e788822-c6c0-494c-86b2-3d095e2ebc66
