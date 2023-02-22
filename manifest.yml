@@ -1,0 +1,15 @@
+modules:
+  jira:projectPage:
+    - key: devexpress-timeline-hello-world-project-page
+      resource: main
+      resolver:
+        function: resolver
+      title: DevExpress-Timeline
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: static/hello-world/build
+app:
+  id: ari:cloud:ecosystem::app/0e788822-c6c0-494c-86b2-3d095e2ebc66
