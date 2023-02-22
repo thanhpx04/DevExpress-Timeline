@@ -3,22 +3,22 @@ export const tasks = [
         'id': 1,
         'parentId': 0,
         'title': 'Software Development',
-        'start': new Date('2019-02-21T05:00:00.000Z'),
-        'end': new Date('2019-07-04T12:00:00.000Z'),
+        'start': new Date('2023-02-21T05:00:00.000Z'),
+        'end': new Date('2023-03-04T12:00:00.000Z'),
         'progress': 31
     }, {
         'id': 2,
         'parentId': 1,
         'title': 'Scope',
-        'start': new Date('2019-02-21T05:00:00.000Z'),
-        'end': new Date('2019-02-26T09:00:00.000Z'),
+        'start': new Date('2023-02-21T05:00:00.000Z'),
+        'end': new Date('2023-03-04T12:00:00.000Z'),
         'progress': 60
     }, {
         'id': 3,
         'parentId': 2,
         'title': 'Determine project scope',
-        'start': new Date('2019-02-21T05:00:00.000Z'),
-        'end': new Date('2019-02-21T09:00:00.000Z'),
+        'start': new Date('2023-02-21T05:00:00.000Z'),
+        'end': new Date('2023-03-04T12:00:00.000Z'),
         'progress': 100
     }
 ];
@@ -58,15 +58,15 @@ export const resources = [
 export const resourceAssignments = [
     {
         'id': 0,
-        'taskId': 3,
+        'taskId': 1,
         'resourceId': 1
     }, {
         'id': 1,
-        'taskId': 4,
-        'resourceId': 1
+        'taskId': 2,
+        'resourceId': 2
     }, {
         'id': 2,
-        'taskId': 5,
-        'resourceId': 2
+        'taskId': 3,
+        'resourceId': 3
     }
 ];
