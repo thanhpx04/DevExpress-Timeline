@@ -1,56 +1,23 @@
 import React, { useEffect, useState } from "react";
-import Gantt, {
-  Tasks,
-  Dependencies,
-  Resources,
-  ResourceAssignments,
-  Column,
-  Editing,
-  Toolbar,
-  Item,
-  Validation,
-} from "devextreme-react/gantt";
-
-import {
-  tasks,
-  dependencies,
-  resources,
-  resourceAssignments,
-} from "./data/ManageData";
+import Gantt, { Tasks, Dependencies, Resources, ResourceAssignments, Column, Editing, Toolbar, Item, Validation, } from "devextreme-react/gantt";
+import { tasks, dependencies, resources, resourceAssignments, } from "./data/ManageData";
 
 function App() {
   var coloredDependencies = ["0", "1"];
 
-  const criticalPath = {
-    text: 'About',
-    icon: 'info',
+  const critical = {
+    text: 'Critical',
+    // icon: 'info',
     stylingMode: 'text',
-    onClick: 'onItemClick'
-};
+    onClick: () => { onCriticalClick(); },
+  };
 
-const onItemClick = (e) => {
-    // ...
-};
-
-  function aboutButtonClick() {
-    document
-      .querySelectorAll("div[dependency-id='0']")
-      .forEach((n) => (n.style.borderColor = "red"));
-  }
-
-  function onContentReady(e) {
-    
-    // var ganttCore = e.component._ganttView._ganttViewCore;
-    // console.log(ganttCore);
-    // var oldCreateConnectorLineElement = ganttCore.createConnectorLineElement;
-    // console.log(oldCreateConnectorLineElement);
-    // ganttCore.createConnectorLineElement = function (info) {
-    //   console.log(info);
-    //   if (coloredDependencies.includes(info.attr["dependency-id"]))
-    //     info.style.borderColor = "red";
-    //   oldCreateConnectorLineElement.call(ganttCore, info);
-    // };
-  }
+  const onCriticalClick = () => {
+    coloredDependencies.forEach(d => {
+      console.log(d)
+      document.querySelectorAll(`div[dependency-id='${d}']`).forEach((n) => (n.style.borderColor = "red"));
+    })
+  };
 
   return (
     <div>
@@ -85,7 +52,7 @@ const onItemClick = (e) => {
             <Item name="showResources" />
             <Item name="showDependencies" />
             <Item name="separator" />
-            <Item widget="dxButton" options={criticalPath} />
+            <Item widget="dxButton" options={critical} />
           </Toolbar>
 
           <Column dataField="title" caption="Subject" width={300} />
