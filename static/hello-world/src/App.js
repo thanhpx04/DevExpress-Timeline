@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Gantt, { Tasks, Dependencies, Resources, ResourceAssignments, Column, Editing, Toolbar, Item, Validation, } from "devextreme-react/gantt";
-import { tasks, dependencies, resources, resourceAssignments, } from "./data/ManageData";
+import { Button } from 'devextreme-react/button';
+import { issueData, findChildByJql, tasks, dependencies, resources, resourceAssignments, } from "./data/ManageData";
+import ProjectFilter from "./component/ProjectFilter";
 
 function App() {
+  let [tasks, setTasks] = useState([]);
+  var [projectsSelected, setProjectsSelected] = useState([]);
   var coloredDependencies = ["0", "1"];
 
   const critical = {
@@ -14,24 +18,68 @@ function App() {
 
   const onCriticalClick = () => {
     coloredDependencies.forEach(d => {
-      console.log(d)
       document.querySelectorAll(`div[dependency-id='${d}']`).forEach((n) => (n.style.borderColor = "red"));
     })
+  };
+
+  const handleClickSearch = async () => {
+    let issueLinkSelected = {
+      "id": "10008",
+      "name": "Parent Issue",
+      "inward": "child of",
+      "outward": "parent of",
+      "self": "https://testpluginsteam.atlassian.net/rest/api/2/issueLinkType/10008"
+    };
+    let issueKey = '';
+
+    if (projectsSelected.length > 0){
+      let response = await issueData(projectsSelected, issueLinkSelected, issueKey);
+      setTasks(response);
+    } else {
+      alert("Please select project and issue link type!");
+      return;
+    }
+  };
+
+  const handleClickReset = (e) => {
+    setProjectsSelected([]);
+  }
+
+  const onChangeProjects = (e) => {
+    setProjectsSelected(e);
   };
 
   return (
     <div>
       <ul className="search-criteria-list">
-        <li>aaa</li>
+        <li>
+          <ProjectFilter
+            value={projectsSelected}
+            onChangeProjects={onChangeProjects}
+          ></ProjectFilter>
+        </li>
+        <li>
+          <Button text="Search" type="default" stylingMode="contained" onClick={handleClickSearch} />
+        </li>
+        <li>
+          <Button text="Reset" type="default" stylingMode="contained" onClick={handleClickReset} />
+        </li>
       </ul>
       <div>
         <Gantt
           taskListWidth={500}
           scaleType="weeks" //'auto' | 'minutes' | 'hours' | 'sixHours' | 'days' | 'weeks' | 'months' | 'quarters' | 'years';
-          height={700}
-          onContentReady={onContentReady}
+          height={600}
         >
-          <Tasks dataSource={tasks} />
+          <Tasks
+            dataSource={tasks}
+            keyExpr="key"
+            parentIdExpr="parentId"
+            progressExpr="progress"
+            startExpr="startdate"
+            endExpr="duedate"
+            colorExpr="color"
+          />
           <Dependencies dataSource={dependencies} />
           <Resources dataSource={resources} />
           <ResourceAssignments dataSource={resourceAssignments} />
