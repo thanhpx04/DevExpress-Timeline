@@ -6,8 +6,8 @@ import ProjectFilter from "./component/ProjectFilter";
 
 function App() {
   let [tasks, setTasks] = useState([]);
-  var [projectsSelected, setProjectsSelected] = useState([]);
-  var coloredDependencies = ["0", "1"];
+  let [projectsSelected, setProjectsSelected] = useState([]);
+  let coloredDependencies = ["2", "3", "4", "5", "6"];
 
   const critical = {
     text: 'Critical',

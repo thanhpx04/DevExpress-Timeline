@@ -134,18 +134,38 @@ export const tasks = [
 export const dependencies = [
     {
         'id': 0,
-        'predecessorId': 1,
-        'successorId': 2,
+        'predecessorId': 'TS-5',
+        'successorId': 'TS-8',
         'type': 0
-    }, {
+    },{
         'id': 1,
-        'predecessorId': 2,
-        'successorId': 3,
+        'predecessorId': 'TS-8',
+        'successorId': 'TS-9',
+        'type': 0
+    },{
+        'id': 2,
+        'predecessorId': 'TS-1',
+        'successorId': 'TS-6',
         'type': 0
     }, {
-        'id': 2,
-        'predecessorId': 3,
-        'successorId': 4,
+        'id': 3,
+        'predecessorId': 'TS-6',
+        'successorId': 'TS-7',
+        'type': 0
+    }, {
+        'id': 4,
+        'predecessorId': 'TS-7',
+        'successorId': 'TS-2',
+        'type': 0
+    }, {
+        'id': 5,
+        'predecessorId': 'TS-2',
+        'successorId': 'TS-4',
+        'type': 0
+    }, {
+        'id': 6,
+        'predecessorId': 'TS-4',
+        'successorId': 'TS-3',
         'type': 0
     }
 ];
