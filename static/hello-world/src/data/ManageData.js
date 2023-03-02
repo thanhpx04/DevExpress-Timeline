@@ -1,20 +1,32 @@
-import {requestJira} from "@forge/bridge"
+import { invoke, requestJira } from "@forge/bridge"
 import * as Constants from '../utility/Constants';
 
 const fetchDataWithJQL = async (params) => {
-    console.log(params);
     const response = await requestJira(`/rest/api/2/search?jql=${params}`);
     return await response.json();
 };
 
-export const issueData = async (projects, linkType, issueKey, dateRange, fixedVersions) => {
-    // let listProject = projects.map(element => JSON.stringify(element.key))
-    let params = issueKey === "" ? `project in (${projects})` : `project in (${projects}) AND issue =${issueKey}`;
-    if (dateRange) {
-        params = params.concat(` AND created >=${formatDate(dateRange.start)} AND created <=${formatDate(dateRange.end)}`);
+export const issueData = async (projects, linkType, sprints, versions, teams) => {
+    let params = `project in (${projects})`;
+    
+    // checking sprint
+    if (sprints && sprints.length > 0) {
+        // const sprintIDs = sprints.map((e) => e.id);
+        params = params.concat(
+            ` AND sprint in (${sprints.join(',')})`
+        );
     }
-    if (fixedVersions) {
-        params = params.concat(` AND fixVersion in ("${fixedVersions.join("\",\"")}")`)
+    // checking project's version
+    if (versions && versions.length > 0) {
+        params = params.concat(
+            ` AND fixVersion in (${versions.join(',')})`
+        );
+    }
+    // checking teams
+    if (teams && teams.length > 0) {
+        params = params.concat(
+            ` AND team in (${teams.join(',')})`
+        );
     }
 
     const result = await fetchDataWithJQL(params);
@@ -37,7 +49,6 @@ export const issueData = async (projects, linkType, issueKey, dateRange, fixedVe
         }
         issues.push(item)
     }))
-    console.log(issues);
     return issues;
 }
 
@@ -57,7 +68,7 @@ const getColorByIssueType = (element) => {
         case Constants.ISSUE_TYPE_STORY_ID:
             result = 'green'
             break;
-        case Constants.ISSUE_TYPE_EPIC_ID:
+        case Constants.ISSUE_TYPE_TASK_ID:
             result = 'blue'
             break;
         default:
@@ -78,123 +89,133 @@ export const getAllProject = async () => {
     return result.values;
 };
 
-export const tasks = [
-    {
-        'id': 1,
-        'parentId': 0,
-        'title': 'Software Development',
-        'start': new Date('2023-02-21T05:00:00.000Z'),
-        'end': new Date('2023-03-04T12:00:00.000Z'),
-        'progress': 31
-    }, {
-        'id': 2,
-        'parentId': 1,
-        'title': 'Scope',
-        'start': new Date('2023-02-21T05:00:00.000Z'),
-        'end': new Date('2023-03-04T12:00:00.000Z'),
-        'progress': 60
-    }, {
-        'id': 3,
-        'parentId': 2,
-        'title': 'Determine project scope',
-        'start': new Date('2023-02-21T05:00:00.000Z'),
-        'end': new Date('2023-03-04T12:00:00.000Z'),
-        'progress': 100
-    }, {
-        'id': 4,
-        'parentId': 0,
-        'title': 'Requirement',
-        'start': new Date('2023-03-04T12:00:00.000Z'),
-        'end': new Date('2023-03-08T12:00:00.000Z'),
-        'progress': 31
-    }, {
-        'id': 5,
-        'parentId': 0,
-        'title': 'Testing',
-        'start': new Date('2023-03-08T12:00:00.000Z'),
-        'end': new Date('2023-03-11T12:00:00.000Z'),
-        'progress': 31
-    }, {
-        'id': 6,
-        'parentId': 4,
-        'title': 'Analyze',
-        'start': new Date('2023-03-04T12:00:00.000Z'),
-        'end': new Date('2023-03-08T12:00:00.000Z'),
-        'progress': 31
-    }, {
-        'id': 7,
-        'parentId': 5,
-        'title': 'Regression test',
-        'start': new Date('2023-03-08T12:00:00.000Z'),
-        'end': new Date('2023-03-11T12:00:00.000Z'),
-        'progress': 31
-    }
-];
+export const getIssueLinkType = async () => {
+    const response = await requestJira(`/rest/api/2/issueLinkType`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+        },
+    });
+    let result = await response.json();
+    return result.issueLinkTypes;
+};
+
+export const getBoardSprints = async (boardID) => {
+    const response = await requestJira(`/rest/agile/1.0/board/${boardID}/sprint`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+        },
+    });
+    let result = await response.json();
+    return result.values.filter(sprint => sprint.state === "active");
+}
+
+export const getSprints = async () => {
+    const response = await requestJira(`/rest/agile/1.0/board`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+        },
+    });
+    let data = await response.json();
+    let boards =  data.values.filter(board => board.type !== "kanban"); // need to remove kanban board due to not support sprint
+    
+    const result = await Promise.all(
+        boards.map(async (e) => {
+            return await getBoardSprints(e.id);
+        })
+    )
+    return Array.from(new Set(result.flat().map(a => a.id)))
+        .map(id => {
+            return result.flat().find(a => a.id === id)
+        }) // result.flat() return list item but not unique. solution to remove duplicate
+}
+
+export const getProjectVersions = async (projectIdOrKey) => {
+    const response = await requestJira(`/rest/api/2/project/${projectIdOrKey}/versions`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+        },
+    });
+    let result = await response.json();
+    return result;
+}
+
+export const getTeams = async (title) => {
+    const rs = await invoke("getTeams", { title: title });
+    return rs.teams;
+};
 
 export const dependencies = [
-    {
-        'id': 0,
-        'predecessorId': 'TS-5',
-        'successorId': 'TS-8',
-        'type': 0
-    },{
-        'id': 1,
-        'predecessorId': 'TS-8',
-        'successorId': 'TS-9',
-        'type': 0
-    },{
-        'id': 2,
-        'predecessorId': 'TS-1',
-        'successorId': 'TS-6',
-        'type': 0
-    }, {
-        'id': 3,
-        'predecessorId': 'TS-6',
-        'successorId': 'TS-7',
-        'type': 0
-    }, {
-        'id': 4,
-        'predecessorId': 'TS-7',
-        'successorId': 'TS-2',
-        'type': 0
-    }, {
-        'id': 5,
-        'predecessorId': 'TS-2',
-        'successorId': 'TS-4',
-        'type': 0
-    }, {
-        'id': 6,
-        'predecessorId': 'TS-4',
-        'successorId': 'TS-3',
-        'type': 0
-    }
+    // {
+    //     'id': 0,
+    //     'predecessorId': 'TS-5',
+    //     'successorId': 'TS-8',
+    //     'type': 0
+    // },{
+    //     'id': 1,
+    //     'predecessorId': 'TS-8',
+    //     'successorId': 'TS-9',
+    //     'type': 0
+    // },{
+    //     'id': 2,
+    //     'predecessorId': 'TS-1',
+    //     'successorId': 'TS-6',
+    //     'type': 0
+    // }, {
+    //     'id': 3,
+    //     'predecessorId': 'TS-6',
+    //     'successorId': 'TS-7',
+    //     'type': 0
+    // }, {
+    //     'id': 4,
+    //     'predecessorId': 'TS-7',
+    //     'successorId': 'TS-2',
+    //     'type': 0
+    // }, {
+    //     'id': 5,
+    //     'predecessorId': 'TS-2',
+    //     'successorId': 'TS-4',
+    //     'type': 0
+    // }, {
+    //     'id': 6,
+    //     'predecessorId': 'TS-4',
+    //     'successorId': 'TS-3',
+    //     'type': 0
+    // }
 ];
 
 export const resources = [
-    {
-        'id': 1,
-        'text': 'Management'
-    }, {
-        'id': 2,
-        'text': 'Project Manager'
-    }, {
-        'id': 3,
-        'text': 'Analyst'
-    }
+    // {
+    //     'id': 1,
+    //     'text': 'Management'
+    // }, {
+    //     'id': 2,
+    //     'text': 'Project Manager'
+    // }, {
+    //     'id': 3,
+    //     'text': 'Analyst'
+    // }
 ];
 
 export const resourceAssignments = [
-    {
-        'id': 0,
-        'taskId': 1,
-        'resourceId': 1
-    }, {
-        'id': 1,
-        'taskId': 2,
-        'resourceId': 2
-    }, {
-        'id': 2,
-        'taskId': 3,
-        'resourceId': 3
-    }
+    // {
+    //     'id': 0,
+    //     'taskId': 1,
+    //     'resourceId': 1
+    // }, {
+    //     'id': 1,
+    //     'taskId': 2,
+    //     'resourceId': 2
+    // }, {
+    //     'id': 2,
+    //     'taskId': 3,
+    //     'resourceId': 3
+    // }
 ];

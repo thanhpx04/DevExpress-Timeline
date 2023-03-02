@@ -3,7 +3,7 @@ import DropDownBox from 'devextreme-react/drop-down-box';
 import TreeView from 'devextreme-react/tree-view';
 import { getAllProject } from "../data/ManageData";
 
-const ProjectFilter = (props) => {
+const ProjectMultiSelect = (props) => {
 
   let [treeBoxValue, setTreeBoxValue] = useState([]);
   let [treeDataSource, setTreeDataSource] = useState([]);
@@ -49,7 +49,6 @@ const ProjectFilter = (props) => {
         dataStructure="plain"
         keyExpr="id"
         displayExpr="name"
-        // parentIdExpr="categoryId"
         selectionMode="multiple"
         showCheckBoxesMode="normal"
         selectByClick={true}
@@ -74,4 +73,4 @@ const ProjectFilter = (props) => {
   )
 
 };
-export default ProjectFilter;
+export default ProjectMultiSelect;

@@ -2,11 +2,19 @@ import React, { useEffect, useState } from "react";
 import Gantt, { Tasks, Dependencies, Resources, ResourceAssignments, Column, Editing, Toolbar, Item, Validation, } from "devextreme-react/gantt";
 import { Button } from 'devextreme-react/button';
 import { issueData, findChildByJql, tasks, dependencies, resources, resourceAssignments, } from "./data/ManageData";
-import ProjectFilter from "./component/ProjectFilter";
+import ProjectMultiSelect from "./component/ProjectMultiSelect";
+import LinkTypeSingleSelect from "./component/LinkTypeSingleSelect";
+import SprintMultiSelect from "./component/SprintMultiSelect";
+import FixedVersionMultiSelect from "./component/FixedVersionMultiSelect";
+import TeamMultiSelect from "./component/TeamMultiSelect";
 
 function App() {
   let [tasks, setTasks] = useState([]);
   let [projectsSelected, setProjectsSelected] = useState([]);
+  let [linkTypeSelected, setLinkTypeSelected] = useState(null);
+  let [sprintsSelected, setSprintsSelected] = useState([]);
+  let [fixedVersionsSelected, setFixedVersionsSelected] = useState([]);
+  let [teamsSelected, setTeamsSelected] = useState([]);
   let coloredDependencies = ["2", "3", "4", "5", "6"];
 
   const critical = {
@@ -17,23 +25,16 @@ function App() {
   };
 
   const onCriticalClick = () => {
+    console.log(tasks)
     coloredDependencies.forEach(d => {
       document.querySelectorAll(`div[dependency-id='${d}']`).forEach((n) => (n.style.borderColor = "red"));
     })
   };
 
   const handleClickSearch = async () => {
-    let issueLinkSelected = {
-      "id": "10008",
-      "name": "Parent Issue",
-      "inward": "child of",
-      "outward": "parent of",
-      "self": "https://testpluginsteam.atlassian.net/rest/api/2/issueLinkType/10008"
-    };
-    let issueKey = '';
-
-    if (projectsSelected.length > 0){
-      let response = await issueData(projectsSelected, issueLinkSelected, issueKey);
+    console.log(tasks)
+    if (projectsSelected.length > 0 && linkTypeSelected != null) {
+      let response = await issueData(projectsSelected, linkTypeSelected, sprintsSelected, fixedVersionsSelected, teamsSelected);
       setTasks(response);
     } else {
       alert("Please select project and issue link type!");
@@ -45,18 +46,59 @@ function App() {
     setProjectsSelected([]);
   }
 
-  const onChangeProjects = (e) => {
-    setProjectsSelected(e);
+  const onChangeProjects = (value) => {
+    setProjectsSelected(value);
+  };
+
+  const onChangeLinkType = (value) => {
+    setLinkTypeSelected(value);
+  };
+
+  const onChangeSprints = (value) => {
+    setSprintsSelected(value);
+  };
+
+  const onChangeFixedVersion = (value) => {
+    setFixedVersionsSelected(value);
+  };
+
+  const onChangeTeams = (value) => {
+    setTeamsSelected(value);
   };
 
   return (
     <div>
       <ul className="search-criteria-list">
         <li>
-          <ProjectFilter
+          <ProjectMultiSelect
             value={projectsSelected}
             onChangeProjects={onChangeProjects}
-          ></ProjectFilter>
+          />
+        </li>
+        <li>
+          <LinkTypeSingleSelect
+            value={linkTypeSelected}
+            onChangeLinkType={onChangeLinkType}
+          />
+        </li>
+        <li>
+          <SprintMultiSelect
+            value={sprintsSelected}
+            onChangeSprints={onChangeSprints}
+          />
+        </li>
+        <li>
+          <FixedVersionMultiSelect
+            projects={projectsSelected}
+            value={fixedVersionsSelected}
+            onChangeFixedVersion={onChangeFixedVersion}
+          />
+        </li>
+        <li>
+          <TeamMultiSelect
+            value={teamsSelected}
+            onChangeTeams={onChangeTeams}
+          />
         </li>
         <li>
           <Button text="Search" type="default" stylingMode="contained" onClick={handleClickSearch} />
@@ -103,9 +145,10 @@ function App() {
             <Item widget="dxButton" options={critical} />
           </Toolbar>
 
-          <Column dataField="title" caption="Subject" width={300} />
-          <Column dataField="start" caption="Start Date" />
-          <Column dataField="end" caption="End Date" />
+          <Column dataField="key" caption="Issue Key"/>
+          <Column dataField="title" caption="Summary" width={300} />
+          <Column dataField="startdate" caption="Start Date" />
+          <Column dataField="duedate" caption="Due Date" />
 
           <Validation autoUpdateParentTasks />
           <Editing enabled />
